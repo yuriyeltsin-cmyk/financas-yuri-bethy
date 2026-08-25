@@ -154,35 +154,44 @@ const defaultFixed=[
 data.fixed = data.fixed || defaultFixed.map((x,i)=>({id:'f'+i,payer:x[0],desc:x[1],cat:x[2],amount:x[3]}));
 function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
 
-async function addExpense(){
- let d=document.getElementById('desc').value.trim(),a=+document.getElementById('amount').value;
- if(!d||!a)return alert('Informe descrição e valor.');
- const item={id:Date.now(),date:document.getElementById('date').value||new Date().toISOString().slice(0,10),desc:d,cat:document.getElementById('cat').value,payer:document.getElementById('payer').value,amount:a};
- data.expenses.unshift(item); save(); await cloud('add',item);
- document.getElementById('desc').value='';document.getElementById('amount').value='';
- tab('list',document.querySelectorAll('.tabs button')[2]);
+function addExpense(){
+ try{
+  const descEl=document.getElementById('desc'), amountEl=document.getElementById('amount');
+  const d=descEl.value.trim(), a=Number(amountEl.value);
+  if(!d || !Number.isFinite(a) || a<=0){ alert('Informe uma descrição e um valor maior que zero.'); return; }
+  const item={id:Date.now(),date:document.getElementById('date').value||new Date().toISOString().slice(0,10),desc:d,cat:document.getElementById('cat').value,payer:document.getElementById('payer').value,amount:a};
+  data.expenses.unshift(item);
+  save();
+  descEl.value=''; amountEl.value='';
+  document.getElementById('apiStatus').textContent='Gasto lançado com sucesso. Se a sincronização estiver configurada, ele será enviado para a planilha.';
+  const listBtn=document.querySelectorAll('.tabs button')[2];
+  if(listBtn) tab('list',listBtn);
+  cloud('add',item).catch(()=>{});
+ }catch(e){ alert('Não foi possível lançar o gasto. Tente recarregar o app.'); console.error(e); }
 }
 async function del(id){data.expenses=data.expenses.filter(x=>x.id!==id);save();await cloud('delete',{id})}
 
-async function addFixed(){
+function addFixed(){
  const desc=document.getElementById('fixedDesc').value.trim();
  const amount=+document.getElementById('fixedAmount').value;
  if(!desc||!amount||amount<0)return alert('Informe descrição e valor mensal.');
  const item={id:'f'+Date.now(),payer:document.getElementById('fixedPayer').value,desc,cat:document.getElementById('fixedCat').value,amount};
- data.fixed.push(item); save(); await cloud('addFixed',item);
+ data.fixed.push(item); save();
  document.getElementById('fixedDesc').value=''; document.getElementById('fixedAmount').value='';
+ document.getElementById('apiStatus').textContent='Gasto fixo adicionado com sucesso.';
+ cloud('addFixed',item).catch(()=>{});
 }
-async function delFixed(id){
+function delFixed(id){
  if(!confirm('Retirar este gasto fixo do orçamento?'))return;
- data.fixed=data.fixed.filter(x=>x.id!==id); save(); await cloud('deleteFixed',{id});
+ data.fixed=data.fixed.filter(x=>x.id!==id); save(); cloud('deleteFixed',{id}).catch(()=>{});
 }
-async function editFixed(id){
+function editFixed(id){
  const item=data.fixed.find(x=>String(x.id)===String(id)); if(!item)return;
  const desc=prompt('Descrição do gasto fixo:',item.desc); if(desc===null)return;
  const amountText=prompt('Valor mensal:',String(item.amount).replace('.',',')); if(amountText===null)return;
  const amount=Number(String(amountText).replace(',','.'));
  if(!desc.trim()||!Number.isFinite(amount)||amount<0)return alert('Dados inválidos.');
- item.desc=desc.trim();item.amount=amount;save();await cloud('updateFixed',item);
+ item.desc=desc.trim();item.amount=amount;save();cloud('updateFixed',item).catch(()=>{});
 }
 function fixedTotals(){
  const y=data.fixed.filter(x=>x.payer==='Yuri').reduce((s,x)=>s+x.amount,0);
