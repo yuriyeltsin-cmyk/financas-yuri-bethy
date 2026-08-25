@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<link rel="manifest" href="manifest.json">
+<title>Finanças — Yuri & Bethy</title>
+<style>
+:root{--bg:#f5f7fa;--card:#fff;--ink:#17202a;--muted:#6b7280;--line:#e5e7eb;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--amber:#d97706}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);padding-bottom:80px}
+header{background:#111827;color:#fff;padding:20px 18px 22px;border-radius:0 0 24px 24px}.head{display:flex;justify-content:space-between;align-items:center}.title{font-size:22px;font-weight:800}.month{font-size:12px;opacity:.75;margin-top:4px}
+.container{max-width:760px;margin:auto}.content{padding:14px}.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:-4px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:0 3px 12px #00000008}.metric .label{font-size:12px;color:var(--muted)}.metric .num{font-size:21px;font-weight:800;margin-top:5px}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}
+.section{margin-top:14px}.section h2{font-size:17px;margin:0 0 10px}.row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.small{font-size:12px;color:var(--muted)}
+.progress{height:10px;background:#e9edf2;border-radius:99px;overflow:hidden}.progress>i{display:block;height:100%;background:var(--blue);width:0}
+button,input,select{font:inherit;border-radius:11px;border:1px solid #d7dce3;padding:11px;background:#fff}button{background:#111827;color:#fff;border:0;font-weight:700}.primary{background:var(--blue)}.danger{background:#fee2e2;color:#991b1b}.ghost{background:#eef2f7;color:#111827}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:9px}.full{grid-column:1/-1}
+.tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);z-index:10}.tabs button{background:#fff;color:#667085;border-radius:0;padding:12px 4px;font-size:11px}.tabs button.active{color:var(--blue);font-weight:800}
+.view{display:none}.view.active{display:block}
+.item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.item strong{display:block}.tag{font-size:11px;padding:4px 7px;background:#eef2ff;border-radius:99px;color:#3730a3}
+.file{border:2px dashed #cbd5e1;padding:22px;text-align:center;border-radius:14px;background:#fafcff}.status{margin-top:9px;padding:10px;border-radius:10px;background:#f1f5f9;font-size:12px}
+@media(min-width:650px){.cards{grid-template-columns:repeat(4,1fr)}.form{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="container">
+<header><div class="head"><div><div class="title">Finanças — Yuri & Bethy</div><div class="month">Setembro/2026 · orçamento compartilhado</div></div><div id="syncDot">●</div></div></header>
+
+<main class="content">
+<section id="dashboard" class="view active">
+<div class="cards">
+<div class="card metric"><div class="label">Renda do casal</div><div class="num">R$ 24.100</div></div>
+<div class="card metric"><div class="label">Meta 20%</div><div class="num green">R$ 4.820</div></div>
+<div class="card metric"><div class="label">Fixos</div><div class="num">R$ 16.316</div></div>
+<div class="card metric"><div class="label">Teto variável</div><div class="num amber" id="limitNum">R$ 2.964</div></div>
+</div>
+<div class="section card">
+<h2>Como estamos no mês</h2>
+<div class="row"><span>Variáveis lançados</span><strong id="spent">R$ 0</strong></div>
+<div class="row"><span>Disponível no teto</span><strong class="green" id="available">R$ 2.963,96</strong></div>
+<div class="progress"><i id="bar"></i></div>
+<p class="small" id="barText">0% do teto variável utilizado.</p>
+</div>
+<div class="section card">
+<h2>Reserva de emergência</h2>
+<div class="row"><span>Meta de 6 meses de fixos</span><strong>R$ 97.896</strong></div>
+<div class="row"><span>Reserva atual</span><input id="reserve" type="number" min="0" step="100" placeholder="R$"></div>
+<div class="progress"><i id="reserveBar"></i></div>
+<p class="small" id="reserveText">Informe o saldo atual.</p>
+</div>
+<div class="section card">
+<h2>Carro até dezembro</h2>
+<div class="row"><span>Meta do carro</span><input id="carGoal" type="number" min="0" step="500" placeholder="R$"></div>
+<div class="row"><span>Guardar por mês (set–dez)</span><strong id="carMonthly">—</strong></div>
+</div>
+</section>
+
+<section id="add" class="view">
+<div class="card"><h2>Novo gasto</h2>
+<div class="form">
+<input id="desc" class="full" placeholder="Ex.: supermercado">
+<select id="cat"><option>Mercado</option><option>Restaurante</option><option>Casa</option><option>Transporte</option><option>Lazer</option><option>Compras</option><option>Saúde</option><option>Assinaturas</option><option>Outros</option></select>
+<input id="amount" type="number" min="0" step=".01" placeholder="Valor">
+<select id="payer"><option>Yuri</option><option>Bethy</option><option>Casal</option></select>
+<input id="date" type="date">
+<button class="primary full" onclick="addExpense()">Adicionar gasto</button>
+</div></div>
+<div class="section card"><h2>Importar planilha do mês</h2>
+<div class="file" onclick="file.click()">📊<br><b>Toque para selecionar</b><br><span class="small">.xlsx, .xls ou .csv</span><input id="file" type="file" accept=".xlsx,.xls,.csv" hidden></div>
+<div id="fileStatus" class="status">Nenhuma planilha importada.</div>
+</div>
+</section>
+
+<section id="list" class="view">
+<div class="card"><h2>Gastos do mês</h2><div id="listBox"></div></div>
+</section>
+
+
+<section id="fixed" class="view">
+<div class="card">
+  <h2>Gastos fixos do casal</h2>
+  <p class="small">Aqui vocês podem adicionar, alterar ou retirar despesas fixas. Os valores alimentam automaticamente o orçamento mensal.</p>
+  <div class="cards" style="margin-top:10px">
+    <div class="card metric"><div class="label">Fixos Yuri</div><div class="num" id="fixedYuri">R$ 0</div></div>
+    <div class="card metric"><div class="label">Fixos Bethy</div><div class="num" id="fixedBethy">R$ 0</div></div>
+    <div class="card metric"><div class="label">Fixos do casal</div><div class="num" id="fixedCouple">R$ 0</div></div>
+    <div class="card metric"><div class="label">Fixos totais</div><div class="num" id="fixedTotal">R$ 0</div></div>
+  </div>
+</div>
+
+<div class="section card">
+  <h2>Adicionar gasto fixo</h2>
+  <div class="form">
+    <input id="fixedDesc" class="full" placeholder="Ex.: Seguro do carro">
+    <select id="fixedPayer"><option>Yuri</option><option>Bethy</option><option>Casal</option></select>
+    <select id="fixedCat"><option>Moradia</option><option>Dívidas</option><option>Transporte</option><option>Academia/esportes</option><option>Assinaturas</option><option>Alimentação</option><option>Pessoal</option><option>Saúde</option><option>Outros</option></select>
+    <input id="fixedAmount" type="number" min="0" step=".01" placeholder="Valor mensal">
+    <button class="primary full" onclick="addFixed()">Adicionar gasto fixo</button>
+  </div>
+</div>
+
+<div class="section card">
+  <h2>Yuri</h2><div id="fixedYuriList"></div>
+</div>
+<div class="section card">
+  <h2>Bethy</h2><div id="fixedBethyList"></div>
+</div>
+<div class="section card">
+  <h2>Casal</h2><div id="fixedCoupleList"></div>
+</div>
+</section>
+
+<section id="settings" class="view">
+<div class="card"><h2>Compartilhamento</h2>
+<p class="small">Este app está preparado para usar uma planilha Google compartilhada como base. Depois de configurar o endereço do Web App, os dois celulares podem consultar e lançar gastos no mesmo banco.</p>
+<label class="small">URL do Web App</label><input id="api" class="full" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;margin-top:6px">
+<button class="primary" style="margin-top:9px" onclick="saveApi()">Salvar conexão</button>
+<div id="apiStatus" class="status">Modo local até configurar o compartilhamento.</div>
+</div>
+<div class="section card"><h2>Regras do casal</h2>
+<div class="row"><span>Guardar primeiro</span><strong>20% da renda</strong></div>
+<div class="row"><span>Teto variável</span><strong>R$ 2.963,96</strong></div>
+<div class="row"><span>Aluguel Pan esperado</span><strong>R$ 2.500</strong></div>
+<div class="row"><span>Resultado Pan após fixos</span><strong>+ R$ 350</strong></div>
+<div class="row"><span>Despesas fixas</span><strong>editáveis no menu Fixos</strong></div>
+</div>
+</section>
+</main>
+<nav class="tabs">
+<button class="active" onclick="tab('dashboard',this)">Resumo</button>
+<button onclick="tab('add',this)">+ Gasto</button>
+<button onclick="tab('list',this)">Lançamentos</button>
+<button onclick="tab('fixed',this)">Fixos</button>
+<button onclick="tab('settings',this)">⚙️</button>
+</nav>
+</div>
+
+<script>
+const KEY='finapp_sep_2026';
+let data=JSON.parse(localStorage.getItem(KEY)||'{"expenses":[]}');
+const fmt=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const limit=2963.96;
+const defaultFixed=[
+["Yuri","Consignado","Dívidas",1600],["Yuri","Empréstimo Onze","Dívidas",1900],
+["Yuri","Consórcio moto","Transporte",350],["Yuri","Gympass","Academia/esportes",640],
+["Yuri","Barbeiro","Pessoal",250],["Yuri","Combustível","Transporte",100],
+["Yuri","Condomínio Pan","Moradia",1200],["Yuri","Prestação apt Pan","Moradia",1650],
+["Yuri","Gympass Alciene","Academia/esportes",185],["Yuri","Cartão de crédito","Dívidas",1000],
+["Yuri","Netflix","Assinaturas",45],["Yuri","iCloud","Assinaturas",33],["Yuri","Amazon","Assinaturas",20],
+["Bethy","Aluguel","Moradia",5000],["Bethy","Condomínio","Moradia",1563.06],
+["Bethy","IPTU","Moradia",303],["Bethy","Água","Moradia",0],["Bethy","Luz","Moradia",202.65],
+["Bethy","Gás","Moradia",38.12],["Bethy","Internet","Moradia",101.32],["Bethy","Celular","Moradia",134.89]
+];
+data.fixed = data.fixed || defaultFixed.map((x,i)=>({id:'f'+i,payer:x[0],desc:x[1],cat:x[2],amount:x[3]}));
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+
+async function addExpense(){
+ let d=document.getElementById('desc').value.trim(),a=+document.getElementById('amount').value;
+ if(!d||!a)return alert('Informe descrição e valor.');
+ const item={id:Date.now(),date:document.getElementById('date').value||new Date().toISOString().slice(0,10),desc:d,cat:document.getElementById('cat').value,payer:document.getElementById('payer').value,amount:a};
+ data.expenses.unshift(item); save(); await cloud('add',item);
+ document.getElementById('desc').value='';document.getElementById('amount').value='';
+ tab('list',document.querySelectorAll('.tabs button')[2]);
+}
+async function del(id){data.expenses=data.expenses.filter(x=>x.id!==id);save();await cloud('delete',{id})}
+
+async function addFixed(){
+ const desc=document.getElementById('fixedDesc').value.trim();
+ const amount=+document.getElementById('fixedAmount').value;
+ if(!desc||!amount||amount<0)return alert('Informe descrição e valor mensal.');
+ const item={id:'f'+Date.now(),payer:document.getElementById('fixedPayer').value,desc,cat:document.getElementById('fixedCat').value,amount};
+ data.fixed.push(item); save(); await cloud('addFixed',item);
+ document.getElementById('fixedDesc').value=''; document.getElementById('fixedAmount').value='';
+}
+async function delFixed(id){
+ if(!confirm('Retirar este gasto fixo do orçamento?'))return;
+ data.fixed=data.fixed.filter(x=>x.id!==id); save(); await cloud('deleteFixed',{id});
+}
+async function editFixed(id){
+ const item=data.fixed.find(x=>String(x.id)===String(id)); if(!item)return;
+ const desc=prompt('Descrição do gasto fixo:',item.desc); if(desc===null)return;
+ const amountText=prompt('Valor mensal:',String(item.amount).replace('.',',')); if(amountText===null)return;
+ const amount=Number(String(amountText).replace(',','.'));
+ if(!desc.trim()||!Number.isFinite(amount)||amount<0)return alert('Dados inválidos.');
+ item.desc=desc.trim();item.amount=amount;save();await cloud('updateFixed',item);
+}
+function fixedTotals(){
+ const y=data.fixed.filter(x=>x.payer==='Yuri').reduce((s,x)=>s+x.amount,0);
+ const b=data.fixed.filter(x=>x.payer==='Bethy').reduce((s,x)=>s+x.amount,0);
+ const c=data.fixed.filter(x=>x.payer==='Casal').reduce((s,x)=>s+x.amount,0);
+ return {y,b,c,total:y+b+c};
+}
+function fixedItem(x){
+ return `<div class="item"><div><strong>${esc(x.desc)}</strong><span class="small">${esc(x.cat)} · ${esc(x.payer)}</span></div>
+ <div style="text-align:right"><b>${fmt(x.amount)}</b><br>
+ <button class="ghost" style="padding:5px 8px;font-size:11px;margin-top:5px" onclick="editFixed('${esc(x.id)}')">Editar</button>
+ <button class="danger" style="padding:5px 8px;font-size:11px;margin-top:5px" onclick="delFixed('${esc(x.id)}')">Retirar</button></div></div>`;
+}
+function renderFixed(){
+ const t=fixedTotals();
+ document.getElementById('fixedYuri').textContent=fmt(t.y);
+ document.getElementById('fixedBethy').textContent=fmt(t.b);
+ document.getElementById('fixedCouple').textContent=fmt(t.c);
+ document.getElementById('fixedTotal').textContent=fmt(t.total);
+ for(const [who,id] of [['Yuri','fixedYuriList'],['Bethy','fixedBethyList'],['Casal','fixedCoupleList']]){
+   const arr=data.fixed.filter(x=>x.payer===who);
+   document.getElementById(id).innerHTML=arr.length?arr.map(fixedItem).join(''):'<p class="small">Nenhum gasto fixo cadastrado.</p>';
+ }
+}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function tab(id,btn){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));btn.classList.add('active')}
+async function syncFromCloud(){
+ const url=localStorage.getItem('finapp_api'); if(!url)return;
+ try{
+   document.getElementById('syncDot').style.color='#f59e0b';
+   const r=await fetch(url+'?t='+Date.now(),{cache:'no-store'}), j=await r.json();
+   if(j.ok){
+     if(Array.isArray(j.rows)) data.expenses=j.rows;
+     if(Array.isArray(j.fixed)) data.fixed=j.fixed;
+     localStorage.setItem(KEY,JSON.stringify(data));render();
+     document.getElementById('apiStatus').textContent='Sincronizado com a planilha compartilhada.';
+     document.getElementById('syncDot').style.color='#22c55e';
+   }
+ }catch(e){
+   document.getElementById('apiStatus').textContent='Não foi possível sincronizar agora. O app continua funcionando localmente.';
+   document.getElementById('syncDot').style.color='#ef4444';
+ }
+}
+async function cloud(action,item){
+ const url=localStorage.getItem('finapp_api'); if(!url)return;
+ try{
+   const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,...item})});
+   const j=await r.json(); if(!j.ok)throw new Error(j.error||'Falha');
+ }catch(e){document.getElementById('apiStatus').textContent='Gasto salvo localmente; sincronização pendente.';}
+}
+async function saveApi(){
+ const url=document.getElementById('api').value.trim();
+ localStorage.setItem('finapp_api',url);
+ document.getElementById('apiStatus').textContent=url?'Conexão salva. Testando...':'Modo local ativado.';
+ if(url) await syncFromCloud();
+}
+
+document.getElementById('reserve').value=localStorage.getItem('finapp_reserve')||'';document.getElementById('carGoal').value=localStorage.getItem('finapp_car')||'';document.getElementById('api').value=localStorage.getItem('finapp_api')||'';document.getElementById('reserve').oninput=e=>{localStorage.setItem('finapp_reserve',e.target.value);render()};document.getElementById('carGoal').oninput=e=>{localStorage.setItem('finapp_car',e.target.value);render()};document.getElementById('date').value=new Date().toISOString().slice(0,10);syncFromCloud();setInterval(syncFromCloud,30000);document.getElementById('file').onchange=e=>{if(e.target.files[0])document.getElementById('fileStatus').textContent='Planilha selecionada: '+e.target.files[0].name+' — a importação/classificação pode ser feita no próximo passo.'};render();
+</script>
+</body></html>
